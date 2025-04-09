@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Clinical Entity Extractor using MedSpaCy</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 2em;
+    }
+    textarea {
+      width: 100%;
+      height: 150px;
+      padding: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+    .results {
+      margin-top: 20px;
+      border: 1px solid #ccc;
+      padding: 10px;
+      background-color: #f9f9f9;
+    }
+    .entity {
+      margin: 5px 0;
+      padding: 5px;
+      border-bottom: 1px solid #ddd;
+    }
+    .entity strong {
+      display: inline-block;
+      width: 100px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Clinical Entity Extractor using MedSpaCy</h1>
+  <p>
+    Enter clinical text to extract entities such as <strong>Medications</strong>,
+    <strong>Problems</strong>, <strong>Lab Findings</strong>, and more.
+    MedSpaCy is optimized for clinical narratives and focuses on what it does best.
+  </p>
+  <textarea id="inputText" placeholder="Type your clinical text here..."></textarea>
+  <br>
+  <button id="extractBtn">Extract Entities</button>
+
+  <div class="results" id="results">
+    <!-- Extracted entities will be displayed here -->
+  </div>
+
+  <script>
+    document.getElementById('extractBtn').onclick = async function() {
+      // Clear previous results
+      const resultsDiv = document.getElementById('results');
+      resultsDiv.innerHTML = '<p>Processing...</p>';
+
+      const text = document.getElementById('inputText').value;
+      
+      try {
+        const response = await fetch('/extract', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: text })
+        });
+        const data = await response.json();
+
+        // Clear and then display the results
+        resultsDiv.innerHTML = '';
+        if (data.entities && data.entities.length > 0) {
+          data.entities.forEach((entity, index) => {
+            const entityDiv = document.createElement('div');
+            entityDiv.className = 'entity';
+            entityDiv.innerHTML = `
+              <div><strong>Entity:</strong> ${entity.text}</div>
+              <div><strong>Type:</strong> ${entity.type}</div>
+              <div><strong>Start:</strong> ${entity.start} <strong>End:</strong> ${entity.end}</div>
+            `;
+            resultsDiv.appendChild(entityDiv);
+          });
+        } else {
+          resultsDiv.innerHTML = '<p>No entities found.</p>';
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        resultsDiv.innerHTML = `<p style="color: red;">Error: ${error}</p>`;
+      }
+    };
+  </script>
+</body>
+</html>
